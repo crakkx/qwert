@@ -2,11 +2,12 @@ import React, { useState } from 'react';
 import NpcCreator from './components/NpcCreator';
 import NpcList from './components/NpcList';
 import ChatWindow from './components/ChatWindow';
+import Arena from './components/Arena';
 import './App.css';
 
 function App() {
   const [selectedNpc, setSelectedNpc] = useState(null);
-  const [activeTab, setActiveTab] = useState('chat'); // 'chat' or 'create'
+  const [activeTab, setActiveTab] = useState('chat'); // 'chat', 'create', or 'arena'
 
   const handleNpcCreated = (newNpc) => {
     // Refresh the NPC list by triggering a re-render
@@ -40,6 +41,12 @@ function App() {
           >
             Create New NPC
           </button>
+          <button 
+            className={`tab-btn ${activeTab === 'arena' ? 'active' : ''}`}
+            onClick={() => setActiveTab('arena')}
+          >
+            🏟️ NPC Arena
+          </button>
         </div>
 
         {activeTab === 'chat' && (
@@ -59,6 +66,12 @@ function App() {
         {activeTab === 'create' && (
           <div className="create-section">
             <NpcCreator onNpcCreated={handleNpcCreated} />
+          </div>
+        )}
+
+        {activeTab === 'arena' && (
+          <div className="arena-section">
+            <Arena />
           </div>
         )}
       </div>
