@@ -1,0 +1,14 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Allow read/write access to NPCs collection
+    match /npcs/{npcId} {
+      allow read, write: if true; // For development - in production, add proper authentication
+      
+      // Allow access to conversations subcollection
+      match /conversations/{conversationId} {
+        allow read, write: if true; // For development - in production, add proper authentication
+      }
+    }
+  }
+} 
