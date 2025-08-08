@@ -63,6 +63,33 @@ A React-based web application that allows you to create AI-powered NPCs (Non-Pla
    - Create a new project
    - Enable Firestore Database
    - Get your Firebase config and update `src/firebase.js`
+   
+   **Firebase Setup Steps:**
+   1. Create a new Firebase project
+   2. Go to Project Settings → General
+   3. Scroll down to "Your apps" section
+   4. Click "Add app" → Web app
+   5. Register your app with a nickname (e.g., "ai-npc-generator")
+   6. Copy the Firebase config object
+   7. Update `src/firebase.js` with your config:
+   
+   ```javascript
+   const firebaseConfig = {
+     apiKey: "your-api-key",
+     authDomain: "your-project-id.firebaseapp.com",
+     projectId: "your-project-id",
+     storageBucket: "your-project-id.appspot.com",
+     messagingSenderId: "your-messaging-sender-id",
+     appId: "your-app-id"
+   };
+   ```
+   
+   **Enable Firestore Database:**
+   1. Go to Firestore Database in Firebase Console
+   2. Click "Create database"
+   3. Choose "Start in test mode" (for development)
+   4. Select a location for your database
+   5. Click "Done"
 
 5. **Start the development server**
    ```bash
@@ -181,6 +208,45 @@ npm run build
 | `REACT_APP_GEMINI_API_KEY` | Google AI API key for dialogue generation | Yes |
 | `REACT_APP_ELEVENLABS_API_KEY` | ElevenLabs API key for TTS | No |
 
+## 🔥 Firebase Configuration
+
+### Firestore Security Rules
+Create a `firestore.rules` file in your project root:
+
+```javascript
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Allow read/write access to all documents for development
+    // In production, implement proper authentication
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+}
+```
+
+### Deploy Firestore Rules
+```bash
+# Install Firebase CLI globally
+npm install -g firebase-tools
+
+# Login to Firebase
+firebase login
+
+# Initialize Firebase in your project
+firebase init firestore
+
+# Deploy Firestore rules
+firebase deploy --only firestore:rules
+```
+
+### Firebase Project Structure
+Your Firestore database will automatically create these collections:
+- `npcs` - Stores all NPC profiles
+- `conversations` - Stores chat conversations
+- `arena-conversations` - Stores arena mode conversations
+
 ## 📱 Browser Compatibility
 
 - Chrome (recommended)
@@ -213,6 +279,9 @@ This project is licensed under the MIT License.
 - Verify your Firebase configuration in `src/firebase.js`
 - Ensure Firestore is enabled in your Firebase project
 - Check that your Firebase rules allow read/write operations
+- Make sure you're using the correct project ID
+- Verify your API key has the necessary permissions
+- Check Firebase Console for any quota limits or billing issues
 
 **TTS Not Working**
 - Verify your ElevenLabs API key is correct
@@ -230,6 +299,28 @@ For issues and questions:
 - Check the troubleshooting section above
 - Review the Firebase and API documentation
 - Open an issue on GitHub
+
+## 💰 Firebase Free Plan (Spark Plan)
+
+This application is designed to work with Firebase's free Spark plan:
+
+### **Included Features:**
+- ✅ **Firestore Database**: 1GB storage, 50K reads/day, 20K writes/day
+- ✅ **Firebase Hosting**: 10GB storage, 360MB/day transfer
+- ✅ **Authentication**: 10K users/month
+- ✅ **No Functions needed**: AI calls made directly from frontend
+
+### **Usage Limits:**
+- **Daily Reads**: 50,000 document reads
+- **Daily Writes**: 20,000 document writes
+- **Storage**: 1GB total storage
+- **Bandwidth**: 10GB/month
+
+### **Cost Optimization:**
+- NPCs are stored efficiently with minimal data
+- Conversations are optimized for storage
+- No server-side processing required
+- All AI calls go directly to Google Gemini API
 
 ---
 
