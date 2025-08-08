@@ -93,7 +93,7 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: linear-gradient(135deg, #000099 0%, #0000CC 90%, #660099 0%, #663399 10%) !important;
+  background: linear-gradient(135deg, #000099 0%, #0000CC 65%, #660099 0%, #663399 35%) !important;
   min-height: 100vh;
   position: relative;
   overflow-x: hidden;
