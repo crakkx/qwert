@@ -44,6 +44,8 @@ const ChatWindow = ({ selectedNpc }) => {
   const [translatedMessages, setTranslatedMessages] = useState({});
   const [conversationPath, setConversationPath] = useState('neutral');
   const [pathHistory, setPathHistory] = useState([]);
+  const [relationshipStatus, setRelationshipStatus] = useState('neutral'); // tracks overall relationship
+  const [pathConsequences, setPathConsequences] = useState({}); // tracks consequences of choices
   const chatContainerRef = useRef(null);
 
   // Generate a conversation ID if none exists
@@ -76,13 +78,25 @@ const ChatWindow = ({ selectedNpc }) => {
       if (conversationDoc.exists()) {
         const data = conversationDoc.data();
         setMessages(data.history || []);
+        setPathHistory(data.pathHistory || []);
+        setRelationshipStatus(data.relationshipStatus || 'neutral');
+        setPathConsequences(data.pathConsequences || {});
+        setConversationPath(data.currentPath || 'neutral');
       } else {
         // Create new conversation document
         await setDoc(conversationRef, {
           startTime: new Date().toISOString(),
-          history: []
+          history: [],
+          pathHistory: [],
+          relationshipStatus: 'neutral',
+          pathConsequences: {},
+          currentPath: 'neutral'
         });
         setMessages([]);
+        setPathHistory([]);
+        setRelationshipStatus('neutral');
+        setPathConsequences({});
+        setConversationPath('neutral');
       }
     } catch (error) {
       console.error('Error loading conversation:', error);
@@ -104,11 +118,12 @@ const ChatWindow = ({ selectedNpc }) => {
     setIsLoading(true);
 
     try {
-      // Use the AI service to generate NPC response
+      // Use the AI service to generate NPC response with path history
       const { npcResponse, playerOptions, isImportantMoment } = await aiService.generateNpcResponse(
         selectedNpc,
         messages,
-        messageText
+        messageText,
+        pathHistory
       );
 
       const npcMessage = {
@@ -129,7 +144,12 @@ const ChatWindow = ({ selectedNpc }) => {
       // Update conversation in Firestore
       const conversationRef = doc(db, 'npcs', selectedNpc.id, 'conversations', conversationId);
       await updateDoc(conversationRef, {
-        history: arrayUnion(playerMessage, npcMessage)
+        history: arrayUnion(playerMessage, npcMessage),
+        pathHistory: pathHistory,
+        relationshipStatus: relationshipStatus,
+        pathConsequences: pathConsequences,
+        currentPath: conversationPath,
+        lastUpdated: new Date().toISOString()
       });
 
     } catch (error) {
@@ -155,12 +175,29 @@ const ChatWindow = ({ selectedNpc }) => {
     const pathType = determineConversationPath(option);
     setConversationPath(pathType);
     
-    // Record the path choice in history
-    setPathHistory(prev => [...prev, {
+    // Calculate relationship impact
+    const relationshipImpact = calculateRelationshipImpact(pathType, relationshipStatus);
+    const newRelationshipStatus = updateRelationshipStatus(relationshipStatus, relationshipImpact);
+    setRelationshipStatus(newRelationshipStatus);
+    
+    // Record the path choice in history with consequences
+    const pathChoice = {
       choice: option,
       path: pathType,
-      timestamp: new Date().toISOString()
-    }]);
+      timestamp: new Date().toISOString(),
+      previousRelationship: relationshipStatus,
+      newRelationship: newRelationshipStatus,
+      impact: relationshipImpact
+    };
+    
+    setPathHistory(prev => [...prev, pathChoice]);
+    
+    // Update path consequences
+    setPathConsequences(prev => ({
+      ...prev,
+      [pathType]: (prev[pathType] || 0) + 1,
+      lastChoice: pathChoice
+    }));
     
     sendMessage(option);
     setDialogueOptions([]);
@@ -170,9 +207,9 @@ const ChatWindow = ({ selectedNpc }) => {
     const optionLower = option.toLowerCase();
     
     // Keywords that indicate different paths
-    const diplomaticKeywords = ['please', 'help', 'trust', 'friend', 'peace', 'understand', 'sorry', 'apologize', 'kind', 'gentle'];
-    const aggressiveKeywords = ['fight', 'attack', 'kill', 'destroy', 'hate', 'enemy', 'war', 'battle', 'threaten', 'force', 'angry'];
-    const neutralKeywords = ['observe', 'watch', 'listen', 'think', 'consider', 'maybe', 'perhaps', 'curious', 'interesting'];
+    const diplomaticKeywords = ['please', 'help', 'trust', 'friend', 'peace', 'understand', 'sorry', 'apologize', 'kind', 'gentle', 'support', 'care', 'respect', 'appreciate'];
+    const aggressiveKeywords = ['fight', 'attack', 'kill', 'destroy', 'hate', 'enemy', 'war', 'battle', 'threaten', 'force', 'angry', 'challenge', 'confront', 'demand'];
+    const neutralKeywords = ['observe', 'watch', 'listen', 'think', 'consider', 'maybe', 'perhaps', 'curious', 'interesting', 'tell me', 'explain', 'why', 'how'];
     
     const diplomaticScore = diplomaticKeywords.filter(keyword => optionLower.includes(keyword)).length;
     const aggressiveScore = aggressiveKeywords.filter(keyword => optionLower.includes(keyword)).length;
@@ -185,6 +222,49 @@ const ChatWindow = ({ selectedNpc }) => {
     } else {
       return 'neutral';
     }
+  };
+
+  const calculateRelationshipImpact = (pathType, currentStatus) => {
+    // Define relationship impact based on path choice
+    const impacts = {
+      diplomatic: { friendly: 2, neutral: 1, hostile: 3, trusted: 1, suspicious: 4 },
+      aggressive: { friendly: -3, neutral: -2, hostile: 1, trusted: -4, suspicious: -1 },
+      neutral: { friendly: 0, neutral: 0, hostile: 0, trusted: 0, suspicious: 0 }
+    };
+    
+    return impacts[pathType][currentStatus] || 0;
+  };
+
+  const updateRelationshipStatus = (currentStatus, impact) => {
+    const statusLevels = ['hostile', 'suspicious', 'neutral', 'friendly', 'trusted'];
+    const currentIndex = statusLevels.indexOf(currentStatus);
+    
+    let newIndex = currentIndex + Math.sign(impact) * Math.min(Math.abs(impact), 2);
+    newIndex = Math.max(0, Math.min(statusLevels.length - 1, newIndex));
+    
+    return statusLevels[newIndex];
+  };
+
+  const getRelationshipColor = (status) => {
+    const colors = {
+      hostile: '#ff4444',
+      suspicious: '#ff8844',
+      neutral: '#888888',
+      friendly: '#44aa44',
+      trusted: '#44ff44'
+    };
+    return colors[status] || '#888888';
+  };
+
+  const getRelationshipIcon = (status) => {
+    const icons = {
+      hostile: '😠',
+      suspicious: '🤨',
+      neutral: '😐',
+      friendly: '😊',
+      trusted: '🤝'
+    };
+    return icons[status] || '😐';
   };
 
   const handleTranslate = async (messageIndex, messageContent) => {
@@ -256,8 +336,21 @@ const ChatWindow = ({ selectedNpc }) => {
           </div>
         </div>
         <div className="npc-details">
-          <p><strong>Race:</strong> {selectedNpc.race || 'Unknown'}</p>
-          <p><strong>Profession:</strong> {selectedNpc.profession || 'Unknown'}</p>
+          <div className="npc-basic-info">
+            <p><strong>Race:</strong> {selectedNpc.race || 'Unknown'}</p>
+            <p><strong>Profession:</strong> {selectedNpc.profession || 'Unknown'}</p>
+          </div>
+          
+          <div className="relationship-status">
+            <span className="relationship-icon">{getRelationshipIcon(relationshipStatus)}</span>
+            <span 
+              className="relationship-text"
+              style={{ color: getRelationshipColor(relationshipStatus) }}
+            >
+              Relationship: {relationshipStatus.charAt(0).toUpperCase() + relationshipStatus.slice(1)}
+            </span>
+          </div>
+
           {conversationPath !== 'neutral' && (
             <div className="conversation-path-indicator">
               <span className="path-indicator-icon">
@@ -265,8 +358,39 @@ const ChatWindow = ({ selectedNpc }) => {
                  conversationPath === 'aggressive' ? '⚔️' : '👁️'}
               </span>
               <span className="path-indicator-text">
-                Path: {conversationPath.charAt(0).toUpperCase() + conversationPath.slice(1)}
+                Current Path: {conversationPath.charAt(0).toUpperCase() + conversationPath.slice(1)}
               </span>
+            </div>
+          )}
+
+          {pathHistory.length > 0 && (
+            <div className="path-history-summary">
+              <details className="path-history-details">
+                <summary className="path-history-summary-text">
+                  📜 Path History ({pathHistory.length} choices)
+                </summary>
+                <div className="path-history-content">
+                  {pathHistory.slice(-3).map((path, index) => (
+                    <div key={index} className={`path-history-item path-${path.path}`}>
+                      <span className="path-choice-icon">
+                        {path.path === 'diplomatic' ? '🤝' : 
+                         path.path === 'aggressive' ? '⚔️' : '👁️'}
+                      </span>
+                      <span className="path-choice-text">{path.choice}</span>
+                      {path.impact !== 0 && (
+                        <span className={`relationship-change ${path.impact > 0 ? 'positive' : 'negative'}`}>
+                          {path.impact > 0 ? '+' : ''}{path.impact}
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                  {pathHistory.length > 3 && (
+                    <div className="path-history-more">
+                      ... and {pathHistory.length - 3} more choices
+                    </div>
+                  )}
+                </div>
+              </details>
             </div>
           )}
         </div>

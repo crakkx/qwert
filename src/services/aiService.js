@@ -20,12 +20,12 @@ class AIService {
   }
 
   // Detect if this is an important conversation moment that requires branching
-  detectImportantMoment(playerInput, conversationHistory, npcData) {
+  detectImportantMoment(playerInput, conversationHistory, npcData, previousPaths = []) {
     const input = playerInput.toLowerCase();
     const historyLength = conversationHistory.length;
     
     // Keywords that indicate important moments
-    const importantKeywords = [
+    const criticalKeywords = [
       'quest', 'mission', 'help', 'dangerous', 'important', 'urgent',
       'secret', 'hidden', 'treasure', 'magic', 'weapon', 'armor',
       'king', 'queen', 'lord', 'lady', 'noble', 'royal',
@@ -36,53 +36,84 @@ class AIService {
       'prophecy', 'destiny', 'fate', 'future',
       'past', 'memory', 'forgotten', 'remember',
       'family', 'father', 'mother', 'child', 'son', 'daughter',
-      'friend', 'ally', 'enemy', 'betrayal', 'trust'
+      'friend', 'ally', 'enemy', 'betrayal', 'trust',
+      'choice', 'decide', 'decision', 'what if', 'should i',
+      'tell me', 'explain', 'why', 'how', 'where', 'when'
     ];
 
-    // Check if input contains important keywords
-    const hasImportantKeywords = importantKeywords.some(keyword => 
-      input.includes(keyword)
-    );
+    const emotionalKeywords = [
+      'afraid', 'scared', 'angry', 'sad', 'happy', 'excited',
+      'worried', 'concerned', 'hopeful', 'desperate', 'confused',
+      'grateful', 'sorry', 'forgive', 'apologize'
+    ];
 
-    // Check if this is a new conversation (first few messages)
-    const isNewConversation = historyLength <= 2;
+    const actionKeywords = [
+      'join', 'follow', 'leave', 'stay', 'go', 'come',
+      'attack', 'defend', 'protect', 'save', 'rescue',
+      'give', 'take', 'steal', 'buy', 'sell', 'trade'
+    ];
 
-    // Check if the player is asking for something significant
-    const isAskingForHelp = input.includes('help') || input.includes('need') || input.includes('want');
-    const isAskingAboutPast = input.includes('past') || input.includes('history') || input.includes('remember');
-    const isAskingAboutFuture = input.includes('future') || input.includes('destiny') || input.includes('prophecy');
-
-    // More selective criteria for important moments
-    let isImportant = false;
-    
-    // Only trigger on specific conditions:
-    // 1. Very specific important keywords (not just any keyword)
-    const criticalKeywords = ['quest', 'mission', 'secret', 'treasure', 'prophecy', 'destiny', 'death', 'kill', 'revenge'];
+    // Check for different types of important keywords
     const hasCriticalKeywords = criticalKeywords.some(keyword => input.includes(keyword));
-    
-    // 2. Deep conversation (more than 8 messages) with important topics
-    const isDeepConversation = historyLength > 8 && hasImportantKeywords;
-    
-    // 3. New conversation with very specific requests
-    const isNewWithCriticalRequest = isNewConversation && (hasCriticalKeywords || 
-      (input.includes('help') && (input.includes('quest') || input.includes('mission') || input.includes('danger'))));
-    
-    // 4. Random chance for variety (10% chance on longer conversations)
-    const randomChance = historyLength > 5 && Math.random() < 0.1;
-    
-    // 5. Specific emotional or dramatic moments
-    const isEmotionalMoment = input.includes('love') || input.includes('hate') || input.includes('betrayal') || 
-                             input.includes('family') || input.includes('friend') || input.includes('enemy');
-    
-    isImportant = hasCriticalKeywords || isDeepConversation || isNewWithCriticalRequest || 
-                  (randomChance && isEmotionalMoment) || (historyLength > 12 && Math.random() < 0.15);
+    const hasEmotionalKeywords = emotionalKeywords.some(keyword => input.includes(keyword));
+    const hasActionKeywords = actionKeywords.some(keyword => input.includes(keyword));
 
-    console.log(`Detecting important moment: ${isImportant ? 'YES' : 'NO'}`);
-    console.log(`- Critical keywords found: ${hasCriticalKeywords}`);
-    console.log(`- Deep conversation: ${isDeepConversation}`);
-    console.log(`- New with critical request: ${isNewWithCriticalRequest}`);
-    console.log(`- Random chance: ${randomChance}`);
-    console.log(`- Emotional moment: ${isEmotionalMoment}`);
+    // Check conversation patterns
+    const isEarlyConversation = historyLength <= 3;
+    const isMidConversation = historyLength > 3 && historyLength <= 8;
+    const isDeepConversation = historyLength > 8;
+
+    // Check if player is asking questions that could lead to branching
+    const isAskingQuestions = input.includes('?') || 
+                             input.includes('what') || input.includes('how') || 
+                             input.includes('why') || input.includes('where') || 
+                             input.includes('when') || input.includes('who');
+
+    // Check if player is making decisions or choices
+    const isMakingChoices = input.includes('choose') || input.includes('decide') || 
+                           input.includes('should i') || input.includes('what if') ||
+                           input.includes('rather') || input.includes('instead');
+
+    // Check for story progression indicators
+    const isStoryProgression = input.includes('next') || input.includes('then') || 
+                              input.includes('after') || input.includes('continue') ||
+                              input.includes('happen');
+
+    // Avoid too frequent branching - check if we recently had an important moment
+    const recentBranchingCooldown = previousPaths.length > 0 && 
+                                   previousPaths[previousPaths.length - 1]?.timestamp &&
+                                   (new Date() - new Date(previousPaths[previousPaths.length - 1].timestamp)) < 60000; // 1 minute cooldown
+
+    // Calculate importance score
+    let importanceScore = 0;
+    
+    if (hasCriticalKeywords) importanceScore += 3;
+    if (hasEmotionalKeywords) importanceScore += 2;
+    if (hasActionKeywords) importanceScore += 2;
+    if (isAskingQuestions && isMidConversation) importanceScore += 2;
+    if (isMakingChoices) importanceScore += 3;
+    if (isStoryProgression) importanceScore += 1;
+    if (isDeepConversation && (hasCriticalKeywords || hasEmotionalKeywords)) importanceScore += 2;
+    if (isEarlyConversation && hasCriticalKeywords) importanceScore += 2;
+
+    // Random factor for unpredictability (but controlled)
+    if (historyLength > 5 && Math.random() < 0.15) importanceScore += 1;
+
+    // Apply cooldown penalty
+    if (recentBranchingCooldown) importanceScore = Math.max(0, importanceScore - 2);
+
+    const isImportant = importanceScore >= 4;
+
+    console.log(`Detecting important moment: ${isImportant ? 'YES' : 'NO'} (Score: ${importanceScore})`);
+    console.log(`- Critical keywords: ${hasCriticalKeywords} (+3)`);
+    console.log(`- Emotional keywords: ${hasEmotionalKeywords} (+2)`);
+    console.log(`- Action keywords: ${hasActionKeywords} (+2)`);
+    console.log(`- Asking questions (mid-convo): ${isAskingQuestions && isMidConversation} (+2)`);
+    console.log(`- Making choices: ${isMakingChoices} (+3)`);
+    console.log(`- Story progression: ${isStoryProgression} (+1)`);
+    console.log(`- Deep conversation with key topics: ${isDeepConversation && (hasCriticalKeywords || hasEmotionalKeywords)} (+2)`);
+    console.log(`- Early conversation with critical: ${isEarlyConversation && hasCriticalKeywords} (+2)`);
+    console.log(`- Recent branching cooldown: ${recentBranchingCooldown} (-2)`);
     console.log(`- History length: ${historyLength}`);
 
     return isImportant;
@@ -122,7 +153,7 @@ class AIService {
     }
   }
 
-  async generateNpcResponse(npcData, conversationHistory, playerInput) {
+  async generateNpcResponse(npcData, conversationHistory, playerInput, previousPaths = []) {
     try {
       if (!GEMINI_API_KEY) {
         throw new Error('Gemini API key not configured. Please check your .env file and restart the development server.');
@@ -134,7 +165,7 @@ class AIService {
       }
 
       // Detect if this is an important moment
-      const isImportantMoment = this.detectImportantMoment(playerInput, conversationHistory, npcData);
+      const isImportantMoment = this.detectImportantMoment(playerInput, conversationHistory, npcData, previousPaths);
 
       // Build the prompt
       const characterProfile = `--- CHARACTER PROFILE ---
@@ -149,32 +180,44 @@ Backstory: ${npcData.backstory || 'No backstory provided'}`;
         ? conversationHistory.map(msg => `${msg.role}: ${msg.content}`).join('\n')
         : 'No previous conversation history.';
 
-      const importantMomentNote = isImportantMoment 
-        ? '\n\n⚠️ IMPORTANT MOMENT DETECTED: This conversation contains significant keywords or is a pivotal moment. Provide a more detailed, emotional, or consequential response that reflects the gravity of the situation.'
+      // Build relationship and path context
+      const relationshipContext = previousPaths.length > 0 
+        ? `\n--- RELATIONSHIP & PATH CONTEXT ---
+Current Relationship Status: ${this.getRelationshipDescription(previousPaths)}
+Previous Path Choices Summary: ${this.getPathSummary(previousPaths)}
+Relationship Trend: ${this.getRelationshipTrend(previousPaths)}
+Expected NPC Attitude: ${this.getNPCAttitudeBasedOnHistory(previousPaths, npcData)}\n`
         : '';
 
-      const finalPrompt = `You are an AI role-playing as a character in a fantasy RPG setting. 
+      const importantMomentNote = isImportantMoment 
+        ? '\n\n⚠️ CRITICAL CONVERSATION MOMENT: This is a branching point that will significantly impact the story direction and character relationships. Generate a response that acknowledges the weight of this moment and reflects the current relationship dynamics.'
+        : '';
+
+      const finalPrompt = `You are an AI role-playing as a character in a fantasy RPG setting with dynamic relationship and consequence systems.
 
 ${characterProfile}
-
+${relationshipContext}
 --- CONVERSATION HISTORY ---
 ${conversationContext}
 
 --- CURRENT INTERACTION ---
 Player: ${playerInput}${importantMomentNote}
 
-Instructions:
-1. Respond as ${npcData.name} would, staying true to their personality, voice, and backstory
-2. Keep responses natural and conversational
-3. If this is a new conversation, introduce yourself appropriately
-4. Respond in character and maintain consistency with previous interactions
-5. Structure your response with proper paragraphs and formatting:
+RESPONSE GUIDELINES:
+1. **Character Consistency**: Respond as ${npcData.name} would, staying true to their personality, voice, and backstory
+2. **Relationship Awareness**: Your response should reflect the current relationship status and how previous player choices have affected your attitude toward them
+3. **Consequence Acknowledgment**: If the player has made consistent diplomatic/aggressive/neutral choices, your NPC should remember and react accordingly
+4. **Emotional Range**: Adjust your emotional tone based on relationship history - be warmer to trusted allies, colder to those who've been hostile
+5. **Natural Progression**: Allow relationships to evolve naturally based on player actions
+6. **Formatting Guidelines**:
    - Use line breaks to separate different thoughts or topics
-   - Use *italics* for emphasis or internal thoughts
-   - Use **bold** for important points or strong emotions
-   - Use \`code\` for any technical terms, names, or special references
-6. Keep responses under 200 words and make them feel natural and in-character
-7. If this is an important moment, provide more detailed and consequential responses`;
+   - Use *italics* for emphasis, internal thoughts, or emotional undertones
+   - Use **bold** for important points, strong emotions, or crucial information
+   - Use \`special terms\` for names, places, or technical references
+7. **Response Length**: Keep responses 150-250 words for important moments, 100-150 for regular interactions
+8. **Story Impact**: If this is an important moment, acknowledge how the conversation might change your relationship or future interactions
+
+Remember: Your character has a memory of past interactions and should respond with appropriate emotional intelligence based on the established relationship dynamics.`;
 
       // Try each model endpoint
       let lastError;
@@ -189,28 +232,58 @@ Instructions:
             let playerOptions = [];
             if (isImportantMoment) {
               try {
-                const optionsPrompt = `Based on this critical conversation moment, generate 3 distinct dialogue options that would lead to COMPLETELY DIFFERENT story paths. Each option should represent a fundamentally different approach or choice the player could make.
+                // Build context including previous paths to influence future choices
+                const pathContext = previousPaths.length > 0 
+                  ? `\n--- PREVIOUS PATH CHOICES ---\n${previousPaths.map(p => `${p.choice} (${p.path} path)`).join('\n')}\n`
+                  : '';
 
-Conversation Context:
+                const optionsPrompt = `You are creating branching dialogue for an RPG conversation system. Based on this critical conversation moment, generate 3 distinct dialogue options that will create MEANINGFUL STORY CONSEQUENCES and lead to different character relationships and plot outcomes.
+
+CHARACTER CONTEXT:
+${characterProfile}
+${pathContext}
+CONVERSATION HISTORY:
 ${conversationContext}
 
+CURRENT MOMENT:
 Player: ${playerInput}
 ${npcData.name}: ${npcResponse}
 
-Generate 3 dialogue options (max 8 words each) that represent different story branches:
-1. A diplomatic/peaceful approach that builds trust and friendship
-2. An aggressive/confrontational approach that creates tension and conflict
-3. A neutral/observant approach that maintains distance and gathers information
+Generate 3 dialogue options that represent fundamentally different approaches with lasting consequences:
 
-Each option should lead to a different narrative direction and story outcome. Return only the options, one per line, no numbering or formatting.`;
+1. DIPLOMATIC PATH (🤝): An option that builds trust, shows empathy, and seeks cooperation. This should lead to friendship, alliances, and peaceful resolutions.
+
+2. AGGRESSIVE PATH (⚔️): An option that creates tension, shows dominance, or challenges the NPC. This should lead to conflict, rivalry, and confrontational outcomes.
+
+3. CUNNING/NEUTRAL PATH (👁️): An option that maintains distance, gathers information, or takes a strategic approach. This should lead to cautious relationships and information-gathering opportunities.
+
+REQUIREMENTS:
+- Each option should be 4-12 words long
+- Options should feel natural and in-character for a player
+- Each option should clearly indicate the intended path through tone and word choice
+- Avoid generic responses - make them specific to this conversation context
+- Consider the NPC's personality and how they might react differently to each approach
+
+Return ONLY the 3 dialogue options, one per line, no numbering or additional text:`;
 
                 const optionsResponse = await this.makeGeminiRequest(GEMINI_MODELS[0], optionsPrompt);
                 if (optionsResponse.data?.candidates?.[0]?.content?.parts?.[0]?.text) {
                   const optionsText = optionsResponse.data.candidates[0].content.parts[0].text.trim();
                   playerOptions = optionsText.split('\n').filter(option => option.trim()).slice(0, 3);
+                  
+                  // Clean up options - remove any numbering or formatting
+                  playerOptions = playerOptions.map(option => 
+                    option.replace(/^\d+\.?\s*/, '').replace(/^[-*]\s*/, '').trim()
+                  ).filter(option => option.length > 0);
                 }
               } catch (error) {
                 console.error('Error generating dialogue options:', error);
+                // Fallback options if AI generation fails
+                playerOptions = [
+                  "I understand and want to help you.",
+                  "That's not my problem to deal with.",
+                  "Tell me more about this situation."
+                ];
               }
             }
 
@@ -252,6 +325,116 @@ Each option should lead to a different narrative direction and story outcome. Re
     }
     
     throw new Error('All response generation attempts failed');
+  }
+
+  // Helper methods for relationship and path analysis
+  getRelationshipDescription(pathHistory) {
+    if (pathHistory.length === 0) return 'Neutral - No significant interactions yet';
+    
+    const latest = pathHistory[pathHistory.length - 1];
+    const relationshipMap = {
+      'hostile': 'Hostile - The NPC views the player as an enemy or threat',
+      'suspicious': 'Suspicious - The NPC is wary and distrustful of the player',
+      'neutral': 'Neutral - The NPC has no strong feelings toward the player',
+      'friendly': 'Friendly - The NPC likes and trusts the player',
+      'trusted': 'Trusted - The NPC deeply trusts and respects the player'
+    };
+    
+    return relationshipMap[latest.newRelationship] || 'Unknown relationship status';
+  }
+
+  getPathSummary(pathHistory) {
+    if (pathHistory.length === 0) return 'No previous choices recorded';
+    
+    const pathCounts = pathHistory.reduce((acc, path) => {
+      acc[path.path] = (acc[path.path] || 0) + 1;
+      return acc;
+    }, {});
+
+    const total = pathHistory.length;
+    const diplomatic = pathCounts.diplomatic || 0;
+    const aggressive = pathCounts.aggressive || 0;
+    const neutral = pathCounts.neutral || 0;
+
+    let dominantPath = 'mixed approach';
+    if (diplomatic > aggressive && diplomatic > neutral) {
+      dominantPath = 'primarily diplomatic approach';
+    } else if (aggressive > diplomatic && aggressive > neutral) {
+      dominantPath = 'primarily aggressive approach';
+    } else if (neutral > diplomatic && neutral > aggressive) {
+      dominantPath = 'primarily cautious/neutral approach';
+    }
+
+    return `${total} choices made - ${dominantPath} (Diplomatic: ${diplomatic}, Aggressive: ${aggressive}, Neutral: ${neutral})`;
+  }
+
+  getRelationshipTrend(pathHistory) {
+    if (pathHistory.length < 2) return 'No trend established yet';
+    
+    const recent = pathHistory.slice(-3);
+    const impacts = recent.map(p => p.impact || 0);
+    const avgImpact = impacts.reduce((sum, impact) => sum + impact, 0) / impacts.length;
+    
+    if (avgImpact > 0.5) return 'Improving - Recent actions have strengthened the relationship';
+    if (avgImpact < -0.5) return 'Deteriorating - Recent actions have damaged the relationship';
+    return 'Stable - Relationship has remained relatively consistent';
+  }
+
+  getNPCAttitudeBasedOnHistory(pathHistory, npcData) {
+    if (pathHistory.length === 0) {
+      return `Should respond according to their base personality: ${npcData.personality || 'neutral disposition'}`;
+    }
+
+    const latest = pathHistory[pathHistory.length - 1];
+    const relationshipStatus = latest.newRelationship;
+    
+    const recentPaths = pathHistory.slice(-3);
+    const pathTypes = recentPaths.map(p => p.path);
+    const dominantRecentPath = this.getMostFrequent(pathTypes);
+
+    const attitudeMap = {
+      'hostile': {
+        'diplomatic': 'Grudgingly acknowledge diplomatic efforts but remain hostile and suspicious',
+        'aggressive': 'Respond with open hostility, anger, and possibly threats',
+        'neutral': 'Cold, dismissive, and unwilling to engage meaningfully'
+      },
+      'suspicious': {
+        'diplomatic': 'Cautiously consider diplomatic overtures but remain guarded',
+        'aggressive': 'Become more defensive and possibly escalate to hostility',
+        'neutral': 'Maintain distance and respond with short, wary answers'
+      },
+      'neutral': {
+        'diplomatic': 'Be open to friendly interaction and show growing warmth',
+        'aggressive': 'Become more cautious and potentially defensive',
+        'neutral': 'Maintain polite but unremarkable interactions'
+      },
+      'friendly': {
+        'diplomatic': 'Respond warmly, offer help, and show genuine care',
+        'aggressive': 'Express disappointment or hurt but try to de-escalate',
+        'neutral': 'Remain friendly but perhaps with slight confusion about mixed signals'
+      },
+      'trusted': {
+        'diplomatic': 'Show deep appreciation, offer valuable assistance or information',
+        'aggressive': 'Express shock and deep hurt, questioning the betrayal',
+        'neutral': 'Maintain trust but seek clarification about the player\'s intentions'
+      }
+    };
+
+    return attitudeMap[relationshipStatus]?.[dominantRecentPath] || 
+           'Respond according to your natural personality and the established relationship';
+  }
+
+  getMostFrequent(array) {
+    if (array.length === 0) return 'neutral';
+    
+    const frequency = array.reduce((acc, item) => {
+      acc[item] = (acc[item] || 0) + 1;
+      return acc;
+    }, {});
+
+    return Object.keys(frequency).reduce((a, b) => 
+      frequency[a] > frequency[b] ? a : b
+    );
   }
 
   async translateText(text, targetLanguage = 'Spanish') {

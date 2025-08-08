@@ -315,4 +315,493 @@
 
 .tab-btn:active {
   transform: translateY(-2px) scale(0.98);
+}
+
+/* ============================================ */
+/* MULTI-CONVERSATIONAL PATHS FEATURE STYLES */
+/* ============================================ */
+
+/* Chat Header Enhancements */
+.chat-header {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.chat-header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.npc-details {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.npc-basic-info {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.npc-basic-info p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* Relationship Status Display */
+.relationship-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  width: fit-content;
+  animation: relationshipGlow 2s ease-in-out infinite alternate;
+}
+
+@keyframes relationshipGlow {
+  0% {
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+  }
+  100% {
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+  }
+}
+
+.relationship-icon {
+  font-size: 1.2rem;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+.relationship-text {
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-shadow: 0 0 10px currentColor;
+}
+
+/* Current Path Indicator */
+.conversation-path-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  width: fit-content;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.path-indicator-icon {
+  font-size: 1rem;
+}
+
+.path-indicator-text {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* Path History Styles */
+.path-history-summary {
+  margin-top: 8px;
+}
+
+.path-history-details {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.path-history-summary-text {
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.8);
+  list-style: none;
+  user-select: none;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.path-history-summary-text:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.path-history-content {
+  padding: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  animation: fadeInDown 0.3s ease-out;
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.path-history-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  margin-bottom: 6px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  border-left: 3px solid transparent;
+}
+
+.path-history-item.path-diplomatic {
+  border-left-color: #44aa44;
+  background: rgba(68, 170, 68, 0.1);
+}
+
+.path-history-item.path-aggressive {
+  border-left-color: #aa4444;
+  background: rgba(170, 68, 68, 0.1);
+}
+
+.path-history-item.path-neutral {
+  border-left-color: #888888;
+  background: rgba(136, 136, 136, 0.1);
+}
+
+.path-choice-icon {
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+
+.path-choice-text {
+  flex: 1;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.relationship-change {
+  font-weight: bold;
+  font-size: 0.75rem;
+  padding: 2px 6px;
+  border-radius: 10px;
+  min-width: 20px;
+  text-align: center;
+}
+
+.relationship-change.positive {
+  background: rgba(68, 170, 68, 0.3);
+  color: #88ff88;
+}
+
+.relationship-change.negative {
+  background: rgba(170, 68, 68, 0.3);
+  color: #ff8888;
+}
+
+.path-history-more {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.6);
+  font-style: italic;
+  font-size: 0.75rem;
+  margin-top: 8px;
+}
+
+/* Enhanced Dialogue Options for Branching Paths */
+.dialogue-options.important-moment {
+  background: linear-gradient(145deg, rgba(255, 215, 0, 0.1), rgba(255, 140, 0, 0.1));
+  border: 2px solid rgba(255, 215, 0, 0.3);
+  border-radius: 16px;
+  padding: 20px;
+  margin: 20px 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.dialogue-options.important-moment::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(45deg, transparent, rgba(255, 215, 0, 0.1), transparent);
+  animation: shimmer 3s ease-in-out infinite;
+  z-index: 0;
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%) translateY(-100%) rotate(45deg);
+  }
+  100% {
+    transform: translateX(100%) translateY(100%) rotate(45deg);
+  }
+}
+
+.important-moment-indicator {
+  text-align: center;
+  margin-bottom: 16px;
+  position: relative;
+  z-index: 1;
+}
+
+.important-moment-indicator h4 {
+  color: #ffd700;
+  margin: 8px 0 4px 0;
+  font-size: 1.1rem;
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+
+.important-moment-indicator p {
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.pulse-dot {
+  width: 8px;
+  height: 8px;
+  background: #ffd700;
+  border-radius: 50%;
+  margin: 0 auto 8px;
+  animation: pulseDot 1.5s ease-in-out infinite;
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
+}
+
+@keyframes pulseDot {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.5);
+    opacity: 0.7;
+  }
+}
+
+.path-options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: relative;
+  z-index: 1;
+}
+
+.dialogue-option.important-option {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  padding: 16px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.dialogue-option.important-option:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+.dialogue-option.important-option.path-diplomatic {
+  border-color: rgba(68, 170, 68, 0.5);
+}
+
+.dialogue-option.important-option.path-diplomatic:hover {
+  background: rgba(68, 170, 68, 0.1);
+  border-color: rgba(68, 170, 68, 0.8);
+  box-shadow: 0 8px 25px rgba(68, 170, 68, 0.2);
+}
+
+.dialogue-option.important-option.path-aggressive {
+  border-color: rgba(170, 68, 68, 0.5);
+}
+
+.dialogue-option.important-option.path-aggressive:hover {
+  background: rgba(170, 68, 68, 0.1);
+  border-color: rgba(170, 68, 68, 0.8);
+  box-shadow: 0 8px 25px rgba(170, 68, 68, 0.2);
+}
+
+.dialogue-option.important-option.path-neutral {
+  border-color: rgba(136, 136, 136, 0.5);
+}
+
+.dialogue-option.important-option.path-neutral:hover {
+  background: rgba(136, 136, 136, 0.1);
+  border-color: rgba(136, 136, 136, 0.8);
+  box-shadow: 0 8px 25px rgba(136, 136, 136, 0.2);
+}
+
+.option-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.path-icon {
+  font-size: 1.2rem;
+}
+
+.path-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  opacity: 0.8;
+}
+
+.option-text {
+  font-size: 1rem;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.95);
+}
+
+/* Chat Container Enhancements */
+.chat-container {
+  max-height: 500px;
+  overflow-y: auto;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 20px;
+}
+
+.message {
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  position: relative;
+  animation: messageSlideIn 0.3s ease-out;
+}
+
+@keyframes messageSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.message.player {
+  background: rgba(0, 100, 200, 0.2);
+  border: 1px solid rgba(0, 100, 200, 0.3);
+  margin-left: 40px;
+}
+
+.message.npc {
+  background: rgba(100, 0, 200, 0.2);
+  border: 1px solid rgba(100, 0, 200, 0.3);
+  margin-right: 40px;
+}
+
+.message-content {
+  margin-bottom: 8px;
+}
+
+.message-content strong {
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 600;
+}
+
+.message-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.message-actions .btn {
+  font-size: 0.75rem;
+  padding: 4px 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.message-actions .btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Loading States */
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  color: rgba(255, 255, 255, 0.8);
+  font-style: italic;
+}
+
+/* Mobile Responsiveness for Path Features */
+@media (max-width: 768px) {
+  .npc-basic-info {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .path-options {
+    gap: 8px;
+  }
+  
+  .dialogue-option.important-option {
+    padding: 12px;
+  }
+  
+  .important-moment-indicator h4 {
+    font-size: 1rem;
+  }
+  
+  .option-text {
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .chat-header {
+    padding: 16px;
+  }
+  
+  .relationship-status {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .conversation-path-indicator {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .message.player {
+    margin-left: 20px;
+  }
+  
+  .message.npc {
+    margin-right: 20px;
+  }
 } 
