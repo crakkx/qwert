@@ -1,0 +1,100 @@
+{
+  "short_name": "AI NPC Generator",
+  "name": "AI NPC Generator - Create and chat with AI-powered characters",
+  "description": "A React-based web application that allows you to create AI-powered NPCs and engage in dynamic conversations with them. Features advanced AI dialogue generation, text-to-speech capabilities, and an arena mode for NPC conversations.",
+  "icons": [
+    {
+      "src": "favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "logo192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "logo512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "maskable any"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#000000",
+  "background_color": "#ffffff",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "en",
+  "categories": ["entertainment", "games", "productivity"],
+  "screenshots": [
+    {
+      "src": "screenshot1.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "AI NPC Generator - Chat Interface"
+    },
+    {
+      "src": "screenshot2.png",
+      "sizes": "750x1334",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "AI NPC Generator - Mobile View"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Create New NPC",
+      "short_name": "Create NPC",
+      "description": "Create a new AI-powered NPC character",
+      "url": "/?tab=create",
+      "icons": [
+        {
+          "src": "favicon.ico",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Chat with NPCs",
+      "short_name": "Chat",
+      "description": "Start chatting with your AI NPCs",
+      "url": "/?tab=chat",
+      "icons": [
+        {
+          "src": "favicon.ico",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "NPC Arena",
+      "short_name": "Arena",
+      "description": "Watch NPCs engage in conversations",
+      "url": "/?tab=arena",
+      "icons": [
+        {
+          "src": "favicon.ico",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false,
+  "edge_side_panel": {
+    "preferred_width": 400
+  },
+  "launch_handler": {
+    "client_mode": "navigate-existing"
+  },
+  "protocol_handlers": [
+    {
+      "protocol": "web+ai-npc",
+      "url": "/?npc=%s"
+    }
+  ]
+}
